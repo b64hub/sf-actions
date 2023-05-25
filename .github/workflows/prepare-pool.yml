@@ -1,0 +1,51 @@
+name: Prepare pool
+on:
+  workflow_call:
+    inputs:
+      pool-tag:
+        required: true
+        type: string
+      config-file:
+        required: true
+        type: string
+    secrets:
+      DEVHUB_SFDX_AUTH_URL:
+        required: true
+      GITHUB_TOKEN:
+        required: true
+
+
+jobs:
+  pool:
+    name: 'Replenish "${{ github.event.inputs.pool-tag }}" pool'
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
+    timeout-minutes: 720 #Set to Maximum Time out
+    steps:
+      - uses: actions/checkout@v2
+        with: 
+          ref: ${{ github.event.inputs.gitRef }}
+          fetch-depth: 0
+
+    
+      - name: 'Authenticate Dev Hub'
+        run: |
+          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
+          sfdx auth:sfdxurl:store -f authfile -a devhub
+
+      # Authenticate to npm
+      - uses: actions/setup-node@v3
+        with:
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: 'Prepare a pool of scratch orgs'
+        run: 'sfdx sfpowerscripts:orchestrator:prepare -f config/project-${{ github.event.inputs.pool-tag }}-pool-def.json -v devhub'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+      # Publish artifacts
+      - uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: scratchorg-logs-pool-${{ github.event.inputs.pool-tag }}
+          path: .sfpowerscripts/prepare_logs
