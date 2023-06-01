@@ -29,8 +29,8 @@ RUN mkdir -p \
   && chmod -R 777 sfdx_plugins
 
 # Install sfpowerscripts package dependecies and plugins
-RUN npm install -g vlocity@1.16.1 \
-  && echo 'y' | sfdx plugins install sfdx-browserforce-plugin@2.9.1 \
+RUN npm install -g vlocity@1.16.1
+RUN echo 'y' | sfdx plugins install sfdx-browserforce-plugin@2.9.1 \
   && echo 'y' | sfdx plugins install sfdmu@4.18.2 \
   && echo 'y' | sfdx plugins install @dxatscale/sfpowerscripts@$SFPOWERSCRIPTS_VERSION
 
