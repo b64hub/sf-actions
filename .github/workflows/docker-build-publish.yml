@@ -1,0 +1,57 @@
+name: Docker Build and Publish
+
+on:
+  push:
+    branches:
+      - main
+      - build-test
+    paths:
+        - 'dockerfiles/**'
+jobs:
+  # changed-files:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         fetch-depth: 0
+
+  #     - name: Get changed files
+  #       id: check-changes
+  #       uses: tj-actions/changed-files@v36
+  #       with:
+  #         files: dockerfiles/**
+  #       outputs:
+  #         changed-dockerfiles
+
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}/sfdx-slim
+
+
+      - name: Build and push image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./dockerfiles
+          file: sfdx-slim.Dockerfile
+          push: true
+          tags: sfdx-slim:latest
+          #${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
