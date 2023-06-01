@@ -5,10 +5,12 @@ on:
       pool-tag:
         required: true
         type: string
+      git-ref:
+        description: "Commit Id from where the pools should be created"
+        required: false
+        default: 'main'
     secrets:
       DEVHUB_SFDX_AUTH_URL:
-        required: true
-      GITHUB_TOKEN:
         required: true
 
 
@@ -21,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with: 
-          ref: ${{ github.event.inputs.gitRef }}
+          ref: ${{ github.event.inputs.git-ref }}
           fetch-depth: 0
 
     

@@ -1,0 +1,47 @@
+name: Release
+on:
+  workflow_call:
+    inputs:
+      release-def-path:
+        required: true
+        type: string
+      environment:
+        required: false
+        type: string
+        default: 'sandbox'
+    secrets:
+      ENV_SFDX_AUTH_URL:
+        required: true
+
+#Set the environment variables for tracking metrics
+#env:
+  #SFPOWERSCRIPTS_NEWRELIC: 'true'
+  #SFPOWERSCRIPTS_NEWRELIC_API_KEY: '${{ secrets.NEWRELIC_INSIGHT_INSERT_KEYS }}'
+  #SFPOWERSCRIPTS_DATADOG: 'true'
+  #SFPOWERSCRIPTS_DATADOG_HOST: '${{ secrets.DATADOG_HOST }}'
+  #SFPOWERSCRIPTS_DATADOG_API_KEY: '${{ secrets.DATADOG_API_KEY }}'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+   
+      - name: Authenticate to ${{ github.event.inputs.environment }} environment
+        run: |
+          echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./authfile
+          sfdx auth:sfdxurl:store -f ./authfile -a st
+
+      # Authenticate to npm
+      - uses: actions/setup-node@v3
+        with:
+         registry-url: 'https://npm.pkg.github.com'
+
+      # Release to environment
+      - name: 'Release to ${{ github.event.inputs.environment }}'
+        run: 'sfdx sfpowerscripts:orchestrator:release -u st -p ${{ github.event.inputs.release-def-path }} --npm --scope ${{ github.repository_owner }} --generatechangelog --branchname changelog -g "::group::,::endgroup::"'
+        env:
+         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
