@@ -1,11 +1,14 @@
 FROM --platform=linux/amd64 node:20.2-bullseye-slim as fetch
 
 ARG DOWNLOAD_URL=https://developer.salesforce.com/media/salesforce-cli/sfdx/channels/nightly/sfdx-linux-x64.tar.xz
+ARG PMD_VERSION=${PMD_VERSION:-6.55.0}
 ENV DEBIAN_FRONTEND=noninteractive 
 ENV SHELL /bin/bash
 
 RUN apt-get update && apt-get install -y -q \
   curl \
+  zip \
+  unzip \
   xz-utils
 
 RUN curl -s $DOWNLOAD_URL --output sfdx-linux-x64.tar.xz \
@@ -15,6 +18,11 @@ RUN curl -s $DOWNLOAD_URL --output sfdx-linux-x64.tar.xz \
   && rm /usr/local/sfdx/bin/node \
   && ln -sf /usr/local/bin/node /usr/local/sfdx/bin/node
 
+RUN mkdir -p /root/sfpowerkit \
+  && cd /root/sfpowerkit \
+  && curl -o pmd.zip -L -C - https://github.com/pmd/pmd/releases/download/pmd_releases/${PMD_VERSION}/pmd-bin-${PMD_VERSION}.zip \
+  && unzip pmd.zip \
+  && rm -f pmd.zip 
 
 # FROM --platform=linux/arm64 node:20.2-bullseye-slim as fetch-arm
 
@@ -36,7 +44,13 @@ RUN curl -s $DOWNLOAD_URL --output sfdx-linux-x64.tar.xz \
 
 
 
+
 FROM --platform=linux/amd64 node:20.2-bullseye-slim
+
+ARG SFPOWERSCRIPTS_VERSION=alpha
+ENV SHELL /bin/bash
+ENV SFDX_CONTAINER_MODE=true
+ENV DEBIAN_FRONTEND=noninteractive 
 
 RUN apt-get update && apt-get install -y -q --no-install-recommends \
   openjdk-11-jdk-headless \
@@ -46,6 +60,7 @@ RUN apt-get update && apt-get install -y -q --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=fetch /usr/local/sfdx /usr/local/sfdx
+COPY --from=fetch /root/sfpowerkit /root/sfpowerkit
 
 ENV PATH="/usr/local/sfdx/bin:$PATH"
 ENV XDG_DATA_HOME=/sfdx_plugins/.local/share \
