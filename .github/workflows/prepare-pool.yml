@@ -9,6 +9,7 @@ on:
         description: "Commit Id from where the pools should be created"
         required: false
         default: 'main'
+        type: string
     secrets:
       DEVHUB_SFDX_AUTH_URL:
         required: true
@@ -16,14 +17,14 @@ on:
 
 jobs:
   pool:
-    name: 'Replenish "${{ github.event.inputs.pool-tag }}" pool'
+    name: 'Replenish "${{ inputs.pool-tag }}" pool'
     runs-on: ubuntu-latest
     container: ghcr.io/dxatscale/sfpowerscripts
     timeout-minutes: 720 #Set to Maximum Time out
     steps:
       - uses: actions/checkout@v2
         with: 
-          ref: ${{ github.event.inputs.git-ref }}
+          ref: ${{ inputs.git-ref }}
           fetch-depth: 0
 
     
@@ -38,7 +39,7 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
 
       - name: 'Prepare a pool of scratch orgs'
-        run: 'sfdx sfpowerscripts:orchestrator:prepare -f config/project-${{ github.event.inputs.pool-tag }}-pool-def.json -v devhub'
+        run: 'sfdx sfpowerscripts:orchestrator:prepare -f config/project-${{ inputs.pool-tag }}-pool-def.json -v devhub'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
@@ -46,5 +47,5 @@ jobs:
       - uses: actions/upload-artifact@v2
         if: ${{ always() }}
         with:
-          name: scratchorg-logs-pool-${{ github.event.inputs.pool-tag }}
+          name: scratchorg-logs-pool-${{ inputs.pool-tag }}
           path: .sfpowerscripts/prepare_logs

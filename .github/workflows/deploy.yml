@@ -14,9 +14,9 @@ on:
 
 jobs:
   deploy:
-    name: 'Deploy to ${{ github.event.inputs.pool-tag }} environment'
-      runs-on: ubuntu-latest
-      container: ghcr.io/dxatscale/sfpowerscripts
+    name: 'Deploy to ${{ inputs.pool-tag }} environment'
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
     steps:
       - uses: actions/checkout@v2
         with:
@@ -32,12 +32,12 @@ jobs:
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
           sfdx auth:sfdxurl:store -f authfile -a devhub
 
-      - name: 'Authenticate to ${{ github.event.inputs.pool-tag }}'
+      - name: 'Authenticate to ${{ inputs.pool-tag }}'
         run: |
           echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./env_authfile
           sfdx auth:sfdxurl:store -f ./env_authfile -a env
 
-      - name: 'Deploy to ${{ github.event.inputs.pool-tag }}'
+      - name: 'Deploy to ${{ inputs.pool-tag }}'
         run: |
           sfdx sfpowerkit:package:dependencies:install -u env -v devhub -w 120 -r
           sfdx sfpowerscripts:orchestrator:deploy -u dev  --skipifalreadyinstalled -g "::group::,::endgroup::" 

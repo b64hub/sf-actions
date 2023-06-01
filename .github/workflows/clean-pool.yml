@@ -12,7 +12,7 @@ on:
 jobs:
 
   clean-pool:
-    name: 'Clean ${{ github.event.inputs.pool-tag }} pool'
+    name: 'Clean ${{ inputs.pool-tag }} pool'
     runs-on: ubuntu-latest
     container: ghcr.io/dxatscale/sfpowerscripts
 
