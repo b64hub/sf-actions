@@ -5,13 +5,9 @@ on:
       pool-tag:
         required: true
         type: string
-      release-def-path:
+      package:
         required: true
         type: string
-      environment:
-        required: false
-        type: string
-        default: 'sandbox'
     secrets:
       DEVHUB_SFDX_AUTH_URL:
         required: true
@@ -31,7 +27,6 @@ jobs:
     name: 'Validate Changed Packages'
     runs-on: ubuntu-latest
     container: ghcr.io/dxatscale/sfpowerscripts
-    if 
 
     steps:
       - uses: actions/checkout@v2
@@ -45,7 +40,7 @@ jobs:
 
       # Validate source and trigger test
       - name: 'Push source to scratch org'
-        run: 'sfdx sfpowerscripts:orchestrator:validate -p $ {{ github.event.inputs.pool-tag }} -v devhub -x'
+        run: 'sfdx sfpowerscripts:orchestrator:validate -p $ {{ inputs.pool-tag }} -v devhub -x'
 
   static:
     name: 'static-analysis-of-Apex-classes-using-PMD'
@@ -60,7 +55,7 @@ jobs:
       - name: "Run PMD static code analysis"
         shell: bash
         run: |
-          sfdx sfpowerscripts:analyze:pmd -b --sourcedir=src/core-crm -o core-crm-pmd-output
+          sfdx sfpowerscripts:analyze:pmd -b --sourcedir=src/${{ inputs.package }} -o ${{ inputs.package }}-pmd-output
 
   validate-package-coverage:
     name: 'validate metadata coverage for unlocked packages'
@@ -74,4 +69,4 @@ jobs:
       - name: "validate metadata coverage"
         shell: bash
         run: |
-          sfdx sfpowerkit:package:valid -n core-crm -b StandardValueSet
+          sfdx sfpowerkit:package:valid -n ${{ inputs.package }} -b StandardValueSet
