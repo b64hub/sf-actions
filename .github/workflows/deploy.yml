@@ -1,0 +1,43 @@
+name: Deploy
+on:
+  workflow_call:
+    inputs:
+      pool-tag:
+        required: false
+        type: string
+        default: 'sandbox'
+    secrets:
+      DEVHUB_SFDX_AUTH_URL:
+        required: true
+      ENV_SFDX_AUTH_URL:
+        required: true
+
+jobs:
+  deploy:
+    name: 'Deploy to ${{ inputs.pool-tag }} environment'
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: quickbuild-artifacts
+          path: artifacts 
+
+      - name: 'Authenticate Dev Hub'
+        run: |
+          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
+          sfdx auth:sfdxurl:store -f authfile -a devhub
+
+      - name: 'Authenticate to ${{ inputs.pool-tag }}'
+        run: |
+          echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./env_authfile
+          sfdx auth:sfdxurl:store -f ./env_authfile -a env
+
+      - name: 'Deploy to ${{ inputs.pool-tag }}'
+        run: |
+          sfdx sfpowerkit:package:dependencies:install -u env -v devhub -w 120 -r
+          sfdx sfpowerscripts:orchestrator:deploy -u dev  --skipifalreadyinstalled -g "::group::,::endgroup::" 

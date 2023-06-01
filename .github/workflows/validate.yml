@@ -1,0 +1,72 @@
+name: 'PR Validation'
+on:
+  workflow_call:
+    inputs:
+      pool-tag:
+        required: true
+        type: string
+      package:
+        required: true
+        type: string
+    secrets:
+      DEVHUB_SFDX_AUTH_URL:
+        required: true
+
+#Set the environment variables for tracking metrics
+#env:
+  #SFPOWERSCRIPTS_NEWRELIC: 'true'
+  #SFPOWERSCRIPTS_NEWRELIC_API_KEY: '${{ secrets.NEWRELIC_INSIGHT_INSERT_KEYS }}'
+  #SFPOWERSCRIPTS_DATADOG: 'true'
+  #SFPOWERSCRIPTS_DATADOG_HOST: '${{ secrets.DATADOG_HOST }}'
+  #SFPOWERSCRIPTS_DATADOG_API_KEY: '${{ secrets.DATADOG_API_KEY }}'
+
+
+
+jobs:
+  validate:
+    name: 'Validate Changed Packages'
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: 'Authenticate Dev Hub'
+        run: |
+          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
+          sfdx auth:sfdxurl:store -f authfile -a devhub
+
+      # Validate source and trigger test
+      - name: 'Push source to scratch org'
+        run: 'sfdx sfpowerscripts:orchestrator:validate -p $ {{ inputs.pool-tag }} -v devhub -x'
+
+  static:
+    name: 'static-analysis-of-Apex-classes-using-PMD'
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
+    if: 
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: "Run PMD static code analysis"
+        shell: bash
+        run: |
+          sfdx sfpowerscripts:analyze:pmd -b --sourcedir=src/${{ inputs.package }} -o ${{ inputs.package }}-pmd-output
+
+  validate-package-coverage:
+    name: 'validate metadata coverage for unlocked packages'
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: "validate metadata coverage"
+        shell: bash
+        run: |
+          sfdx sfpowerkit:package:valid -n ${{ inputs.package }} -b StandardValueSet
