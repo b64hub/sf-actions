@@ -2,8 +2,9 @@ FROM --platform=linux/amd64 node:20.2-alpine3.17 as build
 
 ARG DOWNLOAD_URL=https://developer.salesforce.com/media/salesforce-cli/sfdx/channels/nightly/sfdx-linux-x64.tar.xz
 ARG SFPOWERSCRIPTS_VERSION=alpha
+ARG PMD_VERSION=${PMD_VERSION:-6.55.0}
 
-RUN apk update && apk add --no-cache curl bash flatpak gcompat
+RUN apk update && apk add --no-cache curl bash flatpak gcompat zip unzip
 ENV SHELL /bin/bash
 
 RUN curl -s $DOWNLOAD_URL --output sfdx-linux-x64.tar.xz \
@@ -12,6 +13,12 @@ RUN curl -s $DOWNLOAD_URL --output sfdx-linux-x64.tar.xz \
   && rm sfdx-linux-x64.tar.xz \
   && rm /usr/local/sfdx/bin/node \
   && ln -sf /usr/local/bin/node /usr/local/sfdx/bin/node
+
+RUN mkdir -p /root/sfpowerkit \
+  && cd /root/sfpowerkit \
+  && curl -o pmd.zip -L -C - https://github.com/pmd/pmd/releases/download/pmd_releases/${PMD_VERSION}/pmd-bin-${PMD_VERSION}.zip \
+  && unzip pmd.zip \
+  && rm -f pmd.zip 
 
 ENV PATH="/usr/local/sfdx/bin:$PATH"
 ENV XDG_DATA_HOME=/sfdx_plugins/.local/share \
@@ -42,6 +49,7 @@ ENV SHELL /bin/bash
 ENV SFDX_CONTAINER_MODE=true
 
 COPY --from=build /usr/local/sfdx /usr/local/sfdx
+COPY --from=build /root/sfpowerkit /root/sfpowerkit
 ENV PATH="/usr/local/sfdx/bin:$PATH"
 ENV XDG_DATA_HOME=/sfdx_plugins/.local/share \
     XDG_CONFIG_HOME=/sfdx_plugins/.config  \
