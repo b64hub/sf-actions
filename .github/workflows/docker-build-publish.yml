@@ -7,6 +7,7 @@ on:
       - build-test
     paths:
         - 'dockerfiles/**'
+        - '.github/workflows/**'
 jobs:
   # changed-files:
   #   runs-on: ubuntu-latest
