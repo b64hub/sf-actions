@@ -55,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: "{{defaultContext}}:dockerfiles"
-          file: ./dockerfiles/sfdx-slim.Dockerfile
+          file: "{{defaultContext}}:dockerfiles/sfdx-slim.Dockerfile"
           push: true
           tags: sfdx-slim:latest
           #${{ steps.meta.outputs.tags }}
