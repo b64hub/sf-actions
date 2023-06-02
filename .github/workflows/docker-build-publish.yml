@@ -55,8 +55,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: dockerfiles
-          file: ./dockerfiles/sfdx-slim.Dockerfile
+          file: dockerfiles/sfdx-slim.Dockerfile
           push: true
-          tags: sfdx-slim:latest
+          tags: ghcr.io/${{ github.repository }}/sfdx-slim:latest
           #${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
