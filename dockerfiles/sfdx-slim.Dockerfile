@@ -83,12 +83,3 @@ RUN npm install -g vlocity@1.16.1 \
   && npm cache clean --force
   # && rm -r $XDG_CACHE_HOME
 
-LABEL org.opencontainers.image.description "Lightweight docker image with sfdx and sfpowercripts to reduce container startup times"
-LABEL org.opencontainers.image.licenses "MIT"
-LABEL org.opencontainers.image.url "https://github.com/b64hub/dx-actions"
-LABEL org.opencontainers.image.documentation ""
-LABEL org.opencontainers.image.revision $GIT_COMMIT
-LABEL org.opencontainers.image.vendor "b64"
-LABEL org.opencontainers.image.source "https://github.com/b64hub/dx-actions"
-LABEL org.opencontainers.image.title "SFDX slim docker image"
-

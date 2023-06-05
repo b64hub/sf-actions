@@ -36,8 +36,8 @@ RUN mkdir -p \
   && chmod -R 777 sfdx_plugins
 
 # Install sfpowerscripts package dependecies and plugins
-RUN npm install -g vlocity@1.16.1 \
-  && echo 'y' | sfdx plugins install sfdx-browserforce-plugin@2.9.1 \
+RUN npm install -g vlocity@1.16.1
+RUN echo 'y' | sfdx plugins install sfdx-browserforce-plugin@2.9.1 \
   && echo 'y' | sfdx plugins install sfdmu@4.18.2 \
   && echo 'y' | sfdx plugins install @dxatscale/sfpowerscripts@$SFPOWERSCRIPTS_VERSION
 
@@ -62,13 +62,4 @@ COPY --from=build /usr/local/lib/node_modules /usr/local/lib/node_modules
 
 RUN chmod -R 777 sfdx_plugins \
   && ln -sf /usr/local/lib/node_modules/vlocity/lib/vlocitybuild.js /usr/local/bin/vlocity
-
-LABEL org.opencontainers.image.description "Lightweight docker image with sfdx and sfpowercripts on Alpine"
-LABEL org.opencontainers.image.licenses "MIT"
-LABEL org.opencontainers.image.url "https://github.com/b64hub/dx-actions"
-LABEL org.opencontainers.image.documentation ""
-LABEL org.opencontainers.image.revision $GIT_COMMIT
-LABEL org.opencontainers.image.vendor "b64"
-LABEL org.opencontainers.image.source "https://github.com/b64hub/dx-actions"
-LABEL org.opencontainers.image.title "SFDX alpine docker image"
 
