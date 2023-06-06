@@ -2,7 +2,7 @@ name: Deploy
 on:
   workflow_call:
     inputs:
-      pool-tag:
+      environment:
         required: false
         type: string
         default: 'sandbox'
@@ -14,7 +14,7 @@ on:
 
 jobs:
   deploy:
-    name: 'Deploy to ${{ inputs.pool-tag }} environment'
+    name: 'Deploy to ${{ inputs.environment }} environment'
     runs-on: ubuntu-latest
     container: ghcr.io/dxatscale/sfpowerscripts
     steps:
@@ -32,12 +32,12 @@ jobs:
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
           sfdx auth:sfdxurl:store -f authfile -a devhub
 
-      - name: 'Authenticate to ${{ inputs.pool-tag }}'
+      - name: 'Authenticate to ${{ inputs.environment }}'
         run: |
           echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./env_authfile
           sfdx auth:sfdxurl:store -f ./env_authfile -a env
 
-      - name: 'Deploy to ${{ inputs.pool-tag }}'
+      - name: 'Deploy to ${{ inputs.environment }}'
         run: |
           sfdx sfpowerkit:package:dependencies:install -u env -v devhub -w 120 -r
           sfdx sfpowerscripts:orchestrator:deploy -u dev  --skipifalreadyinstalled -g "::group::,::endgroup::" 

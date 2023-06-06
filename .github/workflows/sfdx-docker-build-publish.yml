@@ -1,0 +1,20 @@
+name: SFDX Image Build and Publish
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+        - 'dockerfiles/**'
+
+jobs:
+  sfdx-slim:
+    uses: ./.github/workflows/docker-build-publish.yml
+    with:
+      image: sfdx-slim
+
+# Image not yet working
+#  sfdx-alpine:
+#    uses: ./.github/workflows/docker-build-publish.yml
+#    with:
+#      image: sfdx-alpine
