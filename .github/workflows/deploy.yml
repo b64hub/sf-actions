@@ -2,19 +2,40 @@ name: Deploy
 on:
   workflow_call:
     inputs:
-      environment:
+      org-alias:
         required: false
         type: string
         default: 'sandbox'
+      datadog:
+        required: false
+        type: boolean
+        default: false
+      newrelic:
+        required: false
+        type: boolean
+        default: false
     secrets:
       DEVHUB_SFDX_AUTH_URL:
         required: true
       ENV_SFDX_AUTH_URL:
         required: true
+      DATADOG_APP_KEY:
+        required: false
+      DATADOG_API_KEY:
+        required: false
+      NEWRELIC_INSIGHT_INSERT_KEYS:
+        required: false
+          
+env:
+  SFPOWERSCRIPTS_NEWRELIC: "${{ inputs.newrelic }}"
+  SFPOWERSCRIPTS_NEWRELIC_API_KEY: '${{ secrets.NEWRELIC_INSIGHT_INSERT_KEYS }}'
+  SFPOWERSCRIPTS_DATADOG: "${{ inputs.datadog }}"
+  SFPOWERSCRIPTS_DATADOG_HOST: "${{ secrets.DATADOG_APP_KEY }}"
+  SFPOWERSCRIPTS_DATADOG_API_KEY: "${{ secrets.DATADOG_API_KEY }}"
 
 jobs:
   deploy:
-    name: 'Deploy to ${{ inputs.environment }} environment'
+    name: 'Deploy to ${{ inputs.org-alias }} environment'
     runs-on: ubuntu-latest
     container: ghcr.io/dxatscale/sfpowerscripts
     steps:
@@ -32,12 +53,12 @@ jobs:
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
           sfdx auth:sfdxurl:store -f authfile -a devhub
 
-      - name: 'Authenticate to ${{ inputs.environment }}'
+      - name: 'Authenticate to ${{ inputs.org-alias }}'
         run: |
           echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./env_authfile
           sfdx auth:sfdxurl:store -f ./env_authfile -a env
 
-      - name: 'Deploy to ${{ inputs.environment }}'
+      - name: 'Deploy to ${{ inputs.org-alias }}'
         run: |
           sfdx sfpowerkit:package:dependencies:install -u env -v devhub -w 120 -r
-          sfdx sfpowerscripts:orchestrator:deploy -u dev  --skipifalreadyinstalled -g "::group::,::endgroup::" 
+          sfdx sfpowerscripts:orchestrator:deploy -u env  --skipifalreadyinstalled -g "::group::,::endgroup::" 
