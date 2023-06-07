@@ -15,3 +15,6 @@ jobs:
         image: [sfdx-slim, sfdx-alpine]
     with:
       image: ${{ matrix.image }}
+    permissions:
+      packages: write
+      contents: read
