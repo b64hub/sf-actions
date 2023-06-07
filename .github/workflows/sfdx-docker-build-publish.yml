@@ -8,13 +8,10 @@ on:
         - 'dockerfiles/**'
 
 jobs:
-  sfdx-slim:
+  build-publish:
     uses: ./.github/workflows/docker-build-publish.yml
+    strategy:
+      matrix: 
+        image: [sfdx-slim, sfdx-alpine]
     with:
-      image: sfdx-slim
-
-# Image not yet working
-#  sfdx-alpine:
-#    uses: ./.github/workflows/docker-build-publish.yml
-#    with:
-#      image: sfdx-alpine
+      image: ${{ matrix.image }}
