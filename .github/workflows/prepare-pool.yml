@@ -21,7 +21,7 @@ on:
     secrets:
       DEVHUB_SFDX_AUTH_URL:
         required: true
-      DATADOG_APP_KEY:
+      DATADOG_HOST:
         required: false
       DATADOG_API_KEY:
         required: false
@@ -32,7 +32,7 @@ env:
   SFPOWERSCRIPTS_NEWRELIC: "${{ inputs.newrelic }}"
   SFPOWERSCRIPTS_NEWRELIC_API_KEY: '${{ secrets.NEWRELIC_INSIGHT_INSERT_KEYS }}'
   SFPOWERSCRIPTS_DATADOG: "${{ inputs.datadog }}"
-  SFPOWERSCRIPTS_DATADOG_HOST: "${{ secrets.DATADOG_APP_KEY }}"
+  SFPOWERSCRIPTS_DATADOG_HOST: "${{ secrets.DATADOG_HOST }}"
   SFPOWERSCRIPTS_DATADOG_API_KEY: "${{ secrets.DATADOG_API_KEY }}"
 
 jobs:
