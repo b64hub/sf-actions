@@ -27,6 +27,7 @@ env:
   SFPOWERSCRIPTS_DATADOG_HOST: "${{ secrets.DATADOG_APP_KEY }}"
   SFPOWERSCRIPTS_DATADOG_API_KEY: "${{ secrets.DATADOG_API_KEY }}"
   
+ 
 jobs:
   build-publish:
     name: 'Build and publish artifact'
