@@ -56,9 +56,9 @@ jobs:
       - name: 'Authenticate to ${{ inputs.org-alias }}'
         run: |
           echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./env_authfile
-          sfdx auth:sfdxurl:store -f ./env_authfile -a env
+          sfdx auth:sfdxurl:store -f ./env_authfile -a ${{ inputs.org-alias }}
 
       - name: 'Deploy to ${{ inputs.org-alias }}'
         run: |
-          sfdx sfpowerkit:package:dependencies:install -u env -v devhub -w 120 -r
-          sfdx sfpowerscripts:orchestrator:deploy -u env  --skipifalreadyinstalled -g "::group::,::endgroup::" 
+          sfdx sfpowerkit:package:dependencies:install -u ${{ inputs.org-alias }} -v devhub -w 120 -r
+          sfdx sfpowerscripts:orchestrator:deploy -u ${{ inputs.org-alias }}  --skipifalreadyinstalled -g "::group::,::endgroup::" 
