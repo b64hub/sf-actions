@@ -46,4 +46,4 @@ jobs:
           sfdx auth:sfdxurl:store -f authfile -a devhub
 
       - name: 'Drop the pool'
-        run: 'sfdx sfpowerscripts:pool:delete -t dev -v devhub'
+        run: 'sfdx sfpowerscripts:pool:delete -t ${{ inputs.pool-tag }} -v devhub'
