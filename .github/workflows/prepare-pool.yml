@@ -10,6 +10,10 @@ on:
         required: false
         default: 'main'
         type: string
+      pool-def:
+        required: false
+        type: string
+        default: config/project-${{ inputs.pool-tag }}-pool-def.json
       datadog:
         required: false
         type: boolean
@@ -59,7 +63,7 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
 
       - name: 'Prepare a pool of scratch orgs'
-        run: 'sfdx sfpowerscripts:orchestrator:prepare -f config/project-${{ inputs.pool-tag }}-pool-def.json -v devhub'
+        run: 'sfdx sfpowerscripts:orchestrator:prepare -f config/project-${{ inputs.pool-def }}-pool-def.json -v devhub'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
