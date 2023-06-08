@@ -39,5 +39,5 @@ jobs:
           context: dockerfiles
           file: dockerfiles/${{ inputs.image }}.Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/${{ inputs.image }}:${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
