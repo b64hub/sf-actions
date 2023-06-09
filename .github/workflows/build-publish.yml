@@ -32,9 +32,6 @@ jobs:
   build-publish:
     name: 'Build and publish artifact'
     runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
     container: ghcr.io/dxatscale/sfpowerscripts
     steps:
       - uses: actions/checkout@v2
