@@ -35,7 +35,7 @@ FROM --platform=linux/amd64 node:20.2-alpine3.17
 ENV SHELL=/bin/bash
 ENV SFDX_CONTAINER_MODE=true 
 
-RUN apk update && apk add --no-cache jq openjdk11
+RUN apk update && apk add --no-cache bash jq openjdk11
 
 COPY --from=build /sfdx_plugins/.local/share /sfdx_plugins/.local/share
 COPY --from=build /usr/local/lib/node_modules /usr/local/lib/node_modules
