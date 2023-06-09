@@ -15,7 +15,6 @@ on:
         description: "Relative path to pool definition file. If not provided will use config/project-{pool-tag}-pool-def.json"
         required: false
         type: string
-        default: config/project-${{ inputs.pool-tag }}-pool-def.json
       datadog:
         description: "Send metrics to datadog. Secrets must be configured."
         required: false
