@@ -3,6 +3,7 @@ on:
   workflow_call:
     inputs:
       pool-tag:
+        description: "Pool tag"
         required: true
         type: string
       git-ref:
@@ -11,14 +12,17 @@ on:
         default: 'main'
         type: string
       pool-def:
+        description: "Relative path to pool definition file. If not provided will use config/project-{pool-tag}-pool-def.json"
         required: false
         type: string
         default: config/project-${{ inputs.pool-tag }}-pool-def.json
       datadog:
+        description: "Send metrics to datadog. Secrets must be configured."
         required: false
         type: boolean
         default: false
       newrelic:
+        description: "Send metrics to newrelic. Secrets must be configured."
         required: false
         type: boolean
         default: false
@@ -63,7 +67,14 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
 
       - name: 'Prepare a pool of scratch orgs'
-        run: 'sfdx sfpowerscripts:orchestrator:prepare -f config/project-${{ inputs.pool-def }}-pool-def.json -v devhub'
+        if: ${{ inputs.pool-def == '' || inputs.pool-def == null }}
+        run: 'sfdx sfpowerscripts:orchestrator:prepare -f config/project-${{ inputs.pool-tag }}-pool-def.json -v devhub'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 'Prepare a pool of scratch orgs'
+        if: ${{ inputs.pool-def != '' }}
+        run: 'sfdx sfpowerscripts:orchestrator:prepare -f ${{ inputs.pool-def }} -v devhub'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
