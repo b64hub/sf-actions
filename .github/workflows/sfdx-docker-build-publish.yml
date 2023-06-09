@@ -1,14 +1,13 @@
 name: SFDX Image Build and Publish
-
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
       - 'dockerfiles/**'
     tags:
-      - '*'
-  workflow_dispatch:
+      - 'v*'
 
 
 jobs:
@@ -16,7 +15,7 @@ jobs:
     uses: ./.github/workflows/docker-build-publish.yml
     strategy:
       matrix: 
-        image: [sfdx-slim, sfdx-alpine]
+        image: [ sfdx-slim, sfdx-alpine ]
     with:
       image: ${{ matrix.image }}
     permissions:
