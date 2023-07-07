@@ -35,7 +35,7 @@ jobs:
   clean-pool:
     name: 'Clean ${{ inputs.pool-tag }} pool'
     runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts
+    container: ghcr.io/dxatscale/sfpowerscripts:latest
 
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
       - name: 'Authenticate Dev Hub'
         run: |
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
-          sfdx auth:sfdxurl:store -f authfile -a devhub
+          sfdx auth sfdxurl store -f authfile -a devhub
 
       - name: 'Drop the pool'
-        run: 'sfdx sfpowerscripts:pool:delete -t ${{ inputs.pool-tag }} -v devhub'
+        run: 'sfp pool:delete -t ${{ inputs.pool-tag }} -v devhub'

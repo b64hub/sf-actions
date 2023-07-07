@@ -46,7 +46,7 @@ jobs:
   pool:
     name: 'Replenish "${{ inputs.pool-tag }}" pool'
     runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts
+    container: ghcr.io/dxatscale/sfpowerscripts:latest
     timeout-minutes: 720 #Set to Maximum Time out
     steps:
       - uses: actions/checkout@v2
@@ -58,7 +58,7 @@ jobs:
       - name: 'Authenticate Dev Hub'
         run: |
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
-          sfdx auth:sfdxurl:store -f authfile -a devhub
+          sfdx auth sfdxurl store -f authfile -a devhub
 
       # Authenticate to npm
       - uses: actions/setup-node@v3
@@ -67,13 +67,13 @@ jobs:
 
       - name: 'Prepare a pool of scratch orgs'
         if: ${{ inputs.pool-def == '' || inputs.pool-def == null }}
-        run: 'sfdx sfpowerscripts:orchestrator:prepare -f config/project-${{ inputs.pool-tag }}-pool-def.json -v devhub'
+        run: 'sfp orchestrator:prepare -f config/project-${{ inputs.pool-tag }}-pool-def.json -v devhub'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 'Prepare a pool of scratch orgs'
         if: ${{ inputs.pool-def != '' }}
-        run: 'sfdx sfpowerscripts:orchestrator:prepare -f ${{ inputs.pool-def }} -v devhub'
+        run: 'sfp orchestrator:prepare -f ${{ inputs.pool-def }} -v devhub'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         

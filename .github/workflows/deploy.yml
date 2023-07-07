@@ -37,7 +37,7 @@ jobs:
   deploy:
     name: 'Deploy to ${{ inputs.org-alias }} environment'
     runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts
+    container: ghcr.io/dxatscale/sfpowerscripts:latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -51,14 +51,14 @@ jobs:
       - name: 'Authenticate Dev Hub'
         run: |
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
-          sfdx auth:sfdxurl:store -f authfile -a devhub
+          sfdx auth sfdxurl store -f authfile -a devhub
 
       - name: 'Authenticate to ${{ inputs.org-alias }}'
         run: |
           echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./env_authfile
-          sfdx auth:sfdxurl:store -f ./env_authfile -a ${{ inputs.org-alias }}
+          sfdx auth sfdxurl store -f ./env_authfile -a ${{ inputs.org-alias }}
 
       - name: 'Deploy to ${{ inputs.org-alias }}'
         run: |
-          sfdx sfpowerkit:package:dependencies:install -u ${{ inputs.org-alias }} -v devhub -w 120 -r
-          sfdx sfpowerscripts:orchestrator:deploy -u ${{ inputs.org-alias }}  --skipifalreadyinstalled -g "::group::,::endgroup::" 
+          sfp dependency:install -u ${{ inputs.org-alias }} -v devhub
+          sfp orchestrator:deploy -u ${{ inputs.org-alias }}  --skipifalreadyinstalled -g "::group::,::endgroup::" 

@@ -32,7 +32,7 @@ jobs:
   build-publish:
     name: 'Build and publish artifact'
     runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts
+    container: ghcr.io/dxatscale/sfpowerscripts:latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -41,12 +41,12 @@ jobs:
       - name: 'Authenticate Dev Hub'
         run: |
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
-          sfdx auth:sfdxurl:store -f authfile -a devhub
+          sfdx auth sfdxurl store -f authfile -a devhub
 
       - name: 'Create packages'
         id: sfpowerscripts-build
         run: |
-          sfdx sfpowerscripts:orchestrator:build -v devhub --diffcheck --branch ${GITHUB_REF#refs/heads/} --buildnumber ${GITHUB_RUN_ID}
+          sfp orchestrator:build -v devhub --diffcheck --branch ${GITHUB_REF#refs/heads/} --buildnumber ${GITHUB_RUN_ID}
 
       # Publish artifacts
       - uses: actions/upload-artifact@v2
@@ -61,6 +61,6 @@ jobs:
 
       - name: Publish
         run: |
-          sfdx sfpowerscripts:orchestrator:publish -d artifacts --npm --scope @${{ github.repository_owner }}  --gittag --pushgittag
+          sfp orchestrator:publish -d artifacts --npm --scope @${{ github.repository_owner }}  --gittag --pushgittag
         env:
          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

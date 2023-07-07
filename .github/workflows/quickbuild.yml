@@ -31,7 +31,7 @@ jobs:
   quickbuild:
     name: 'Quickbuild packages'
     runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts
+    container: ghcr.io/dxatscale/sfpowerscripts:latest
     steps:
       - uses: actions/checkout@v2
         with:
@@ -40,12 +40,12 @@ jobs:
       - name: 'Authenticate Dev Hub'
         run: |
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
-          sfdx auth:sfdxurl:store -f authfile -a devhub
+          sfdx auth sfdxurl store -f authfile -a devhub
 
       - name: 'Create packages'
         id: sfpowerscripts-build
         run: |
-          sfdx sfpowerscripts:orchestrator:quickbuild -v devhub --diffcheck --buildnumber ${GITHUB_RUN_ID} --branch ${GITHUB_REF#refs/heads/}
+          sfp orchestrator:quickbuild -v devhub --diffcheck --buildnumber ${GITHUB_RUN_ID} --branch ${GITHUB_REF#refs/heads/}
 
       # Publish artifacts
       - uses: actions/upload-artifact@v2
