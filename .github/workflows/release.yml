@@ -5,7 +5,7 @@ on:
       release-def-path:
         required: true
         type: string
-      environment:
+      org:
         required: false
         type: string
         default: 'sandbox'
@@ -19,6 +19,8 @@ on:
         default: false
     secrets:
       ENV_SFDX_AUTH_URL:
+        required: true
+      DEVHUB_SFDX_AUTH_URL:
         required: true
       DATADOG_HOST:
         required: false
@@ -42,11 +44,16 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Authenticate to devhub environment
+        run: |
+          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
+          sf org login sfdx-url -f authfile -a devhub
    
-      - name: Authenticate to ${{ inputs.environment }} environment
+      - name: Authenticate to ${{ inputs.org }} environment
         run: |
           echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./authfile
-          sf org login sfdx-url -f authfile -a ${{ inputs.environment }}
+          sf org login sfdx-url -f authfile -a ${{ inputs.org }}
 
       # Authenticate to npm
       - uses: actions/setup-node@v3
@@ -54,7 +61,9 @@ jobs:
          registry-url: 'https://npm.pkg.github.com'
 
       # Release to environment
-      - name: 'Release to ${{ inputs.environment }}'
-        run: 'sfp orchestrator:release -u ${{ inputs.environment }} -p ${{ inputs.release-def-path }} --npm --scope ${{ github.repository_owner }} --generatechangelog --branchname changelog -g "::group::,::endgroup::"'
+      - name: 'Release to ${{ inputs.org }}'
+        run: 'sfp orchestrator:release -u ${{ inputs.org }} -v devhub -p ${{ inputs.release-def-path }} --npm --scope ${{ github.repository_owner }} --generatechangelog --branchname changelog -g "::group::,::endgroup::"'
         env:
          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+  
