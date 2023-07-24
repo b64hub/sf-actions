@@ -46,7 +46,7 @@ jobs:
       - name: Authenticate to ${{ inputs.environment }} environment
         run: |
           echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./authfile
-          sfdx auth sfdxurl store -f ./authfile -a env
+          sf org login sfdx-url -f authfile -a ${{ inputs.environment }}
 
       # Authenticate to npm
       - uses: actions/setup-node@v3
