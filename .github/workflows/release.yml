@@ -9,6 +9,10 @@ on:
         required: false
         type: string
         default: 'sandbox'
+      loglevel:
+        required: false
+        type: string
+        default: info
       datadog:
         required: false
         type: boolean
@@ -62,7 +66,7 @@ jobs:
 
       # Release to environment
       - name: 'Release to ${{ inputs.org }}'
-        run: 'sfp orchestrator:release -u ${{ inputs.org }} -v devhub -p ${{ inputs.release-def-path }} --npm --scope ${{ github.repository_owner }} --generatechangelog --branchname changelog -g "::group::,::endgroup::"'
+        run: 'sfp orchestrator:release -u ${{ inputs.org }} -v devhub -p ${{ inputs.release-def-path }} --npm --scope ${{ github.repository_owner }} --generatechangelog --branchname changelog -g "::group::,::endgroup::"' --loglevel ${{ inputs.loglevel }}
         env:
          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
