@@ -47,17 +47,11 @@ jobs:
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
           sf org login sfdx-url -f authfile -a devhub
 
-      - name: 'Create changed packages'
+      - name: 'Create packages'
         if: ${{ inputs.diffcheck }}
         id: sfpowerscripts-build
         run: |
-          sfp orchestrator:build -v devhub --diffcheck --branch ${GITHUB_REF#refs/heads/} --buildnumber ${GITHUB_RUN_ID}
-      
-      - name: 'Create all packages'
-        if: ${{ !inputs.diffcheck }}
-        id: sfpowerscripts-build-all
-        run: |
-          sfp orchestrator:build -v devhub --branch ${GITHUB_REF#refs/heads/} --buildnumber ${GITHUB_RUN_ID}
+          sfp orchestrator:build -v devhub ${{ inputs.diffcheck && '--diffcheck' || '' }}  --branch ${GITHUB_REF#refs/heads/} --buildnumber ${GITHUB_RUN_ID}
 
       # Publish artifacts
       - uses: actions/upload-artifact@v2
