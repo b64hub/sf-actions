@@ -31,7 +31,7 @@ jobs:
   quickbuild:
     name: 'Quickbuild packages'
     runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts:latest
+    container: ghcr.io/flxbl-io/sfp-rc:alpha
     steps:
       - uses: actions/checkout@v3
         with:
@@ -43,9 +43,9 @@ jobs:
           sf org login sfdx-url -f authfile -a devhub
 
       - name: 'Create packages'
-        id: sfpowerscripts-build
+        id: build-packages
         run: |
-          sfp orchestrator:quickbuild -v devhub --diffcheck --buildnumber ${GITHUB_RUN_ID} --branch ${GITHUB_REF#refs/heads/}
+          sfp quickbuild -v devhub --diffcheck --buildnumber ${GITHUB_RUN_ID} --branch ${GITHUB_REF#refs/heads/}
 
       # Publish artifacts
       - uses: actions/upload-artifact@v2

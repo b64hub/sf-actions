@@ -36,7 +36,7 @@ jobs:
   build-publish:
     name: 'Build and publish artifact'
     runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts:latest
+    container: ghcr.io/flxbl-io/sfp-rc:alpha
     steps:
       - uses: actions/checkout@v3
         with:
@@ -49,9 +49,9 @@ jobs:
 
       - name: 'Create packages'
         if: ${{ inputs.diffcheck }}
-        id: sfpowerscripts-build
+        id: build-packages
         run: |
-          sfp orchestrator:build -v devhub ${{ inputs.diffcheck && '--diffcheck' || '' }}  --branch ${GITHUB_REF#refs/heads/} --buildnumber ${GITHUB_RUN_ID}
+          sfp build -v devhub ${{ inputs.diffcheck && '--diffcheck' || '' }}  --branch ${GITHUB_REF#refs/heads/} --buildnumber ${GITHUB_RUN_ID}
 
       # Publish artifacts
       - uses: actions/upload-artifact@v2
@@ -66,6 +66,6 @@ jobs:
 
       - name: Publish
         run: |
-          sfp orchestrator:publish -d artifacts --npm --scope @${{ github.repository_owner }}  --gittag --pushgittag
+          sfp publish -d artifacts --npm --scope @${{ github.repository_owner }}  --gittag --pushgittag
         env:
          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

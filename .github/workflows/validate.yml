@@ -5,9 +5,6 @@ on:
       pool-tag:
         required: true
         type: string
-      package:
-        required: true
-        type: string
       datadog:
         required: false
         type: boolean
@@ -35,49 +32,37 @@ env:
 
 jobs:
   validate:
-    name: 'Validate Changed Packages'
+    name: "Validate Changed Packages"
     runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts:latest
+    container: ghcr.io/flxbl-io/sfp-rc:alpha
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: 'Authenticate Dev Hub'
+      - name: "npm install"
+        run: |
+          npm install
+
+      - name: "Authenticate Dev Hub"
         run: |
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
-          sfdx auth sfdxurl store -f authfile -a devhub
+          sf org login sfdx-url -f authfile -a devhub
 
-      # Validate source and trigger test
-      - name: 'Push source to scratch org'
-        run: 'sfp orchestrator:validate -p ${{ inputs.pool-tag }} -v devhub -x'
+      - name: "Push source to scratch org"
+        run: "sfp validate -p ${{ inputs.pool-tag }} -v devhub -x --basebranch ${{ github.base_ref }}"
 
-  # static:
-  #   name: 'static-analysis-of-Apex-classes-using-PMD'
-  #   runs-on: ubuntu-latest
-  #   container: ghcr.io/dxatscale/sfpowerscripts:latest
-  #   if: 
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
+  static:
+    name: "Static Apex Code Analysis"
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-  #     - name: "Run PMD static code analysis"
-  #       shell: bash
-  #       run: |
-  #         sfdx sfpowerscripts:analyze:pmd -b --sourcedir=src/${{ inputs.package }} -o ${{ inputs.package }}-pmd-output
-
-  # validate-package-coverage:
-  #   name: 'validate metadata coverage for unlocked packages'
-  #   runs-on: ubuntu-latest
-  #   container: ghcr.io/dxatscale/sfpowerscripts:latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
-
-  #     - name: "validate metadata coverage"
-  #       shell: bash
-  #       run: |
-  #         sfdx sfpowerkit:package:valid -n ${{ inputs.package }} -b StandardValueSet
+      - name: "Run PMD static code analysis"
+        shell: bash
+        run: |
+          sf scanner run -p ./src --target "./**/**.cls" --outfile scanner-output.xml --format=junit
