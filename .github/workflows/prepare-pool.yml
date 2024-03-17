@@ -15,6 +15,7 @@ on:
         description: "Relative path to pool definition file. If not provided will use config/project-{pool-tag}-pool-def.json"
         required: false
         type: string
+        default: 
       datadog:
         description: "Send metrics to datadog. Secrets must be configured."
         required: false
@@ -69,8 +70,7 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
 
       - name: 'Prepare a pool of scratch orgs'
-        if: ${{ inputs.pool-def == '' || inputs.pool-def == null }}
-        run: 'sfp prepare -f ${{ (inputs.pool-def == '' || inputs.pool-def == null) && env.DEFAULT_POOL_DEF || inputs.pool-def }} -v devhub'
+        run: 'sfp prepare -f ${{ (inputs.pool-def == "" || inputs.pool-def == null) && env.DEFAULT_POOL_DEF || inputs.pool-def }} -v devhub'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
