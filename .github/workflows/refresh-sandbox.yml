@@ -1,0 +1,39 @@
+name: "Refresh Salesforce Sandbox"
+
+on:
+  workflow_call:
+    inputs:
+      sandbox_name:
+        description: "Sandbox Name"
+        required: true
+        type: string
+      definition_file:
+        description: "Path to definition file"
+        required: true
+        type: string
+    secrets:
+      DEVHUB_SFDX_AUTH_URL:
+        description: "Devhub auth url"
+        required: true
+
+jobs:
+  create-sandbox:
+    runs-on: ubuntu-latest
+    container:
+      image: flxbl-io/sfp-rc:Mar-23
+
+    steps:
+      - uses: actions/checkout@v3
+        with: 
+          ref: ${{ inputs.git-ref }}
+          fetch-depth: 0
+    
+      - name: 'Authenticate Dev Hub'
+        run: |
+          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
+          sf org login sfdx-url -f authfile -a devhub
+
+      - name: Refresh Salesforce Sandbox
+        run: |
+          sf org refresh sandbox -f ${{ inputs.definition_file }} \
+           --name ${{ inputs.sandbox_name }} --target-org devhub --no-prompt --async

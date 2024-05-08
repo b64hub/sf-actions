@@ -1,0 +1,44 @@
+name: "Create Salesforce Sandbox"
+
+on:
+  workflow_call:
+    inputs:
+      definition_file:
+        description: "Path to definition file"
+        required: true
+        type: string
+      sandbox_name:
+        description: "Sandbox Name"
+        required: true
+        type: string
+      license:
+        description: "Sandbox license"
+        required: false
+        type: string
+        default: Developer
+    secrets:
+      DEVHUB_SFDX_AUTH_URL:
+        description: "Devhub auth url"
+        required: true
+
+jobs:
+  create-sandbox:
+    runs-on: ubuntu-latest
+    container:
+      image: flxbl-io/sfp-rc:Mar-23
+
+    steps:
+      - uses: actions/checkout@v3
+        with: 
+          ref: ${{ inputs.git-ref }}
+          fetch-depth: 0
+    
+      - name: 'Authenticate Dev Hub'
+        run: |
+          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
+          sf org login sfdx-url -f authfile -a devhub
+
+      - name: Create Salesforce Sandbox
+        run: |
+          sf org create sandbox --alias ${{ inputs.sandbox_name }} -f ${{ inputs.definition_file }} \
+           -l ${{ inputs.license }} --name ${{ inputs.sandbox_name }} --target-org devhub --no-prompt --async
