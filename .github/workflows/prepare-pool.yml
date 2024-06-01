@@ -47,7 +47,7 @@ jobs:
   pool:
     name: 'Replenish "${{ inputs.pool-tag }}" pool'
     runs-on: ubuntu-latest
-    container: ghcr.io/flxbl-io/sfp-rc:alpha
+    container: ghcr.io/flxbl-io/sfp-rc:release-Mar24
     timeout-minutes: 720 #Set to Maximum Time out
     steps:
       - uses: actions/checkout@v3
@@ -69,8 +69,8 @@ jobs:
         with:
           registry-url: 'https://npm.pkg.github.com'
 
-      - name: 'Prepare a pool of scratch orgs'
-        run: 'sfp prepare -f ${{ (inputs.pool-def == "" || inputs.pool-def == null) && env.DEFAULT_POOL_DEF || inputs.pool-def }} -v devhub'
+      - name: "Prepare a pool of scratch orgs"
+        run: "sfp prepare -f ${{ (inputs.pool-def == '' || inputs.pool-def == null) && env.DEFAULT_POOL_DEF || inputs.pool-def }} -v devhub"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
