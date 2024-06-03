@@ -51,12 +51,12 @@ jobs:
       - name: 'Authenticate Dev Hub'
         run: |
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
-         sf org login sfdx-url -f authfile -a devhub
+          sf org login sfdx-url -f authfile -a devhub
 
       - name: 'Authenticate to ${{ inputs.org-alias }}'
         run: |
           echo "${{ secrets.ENV_SFDX_AUTH_URL }}" > ./env_authfile
-         sf org login sfdx-url -f ./env_authfile -a ${{ inputs.org-alias }}
+          sf org login sfdx-url -f ./env_authfile -a ${{ inputs.org-alias }}
 
       - name: 'Deploy to ${{ inputs.org-alias }}'
         run: |
