@@ -73,7 +73,7 @@ jobs:
         run: "sfp prepare -f ${{ (inputs.pool-def == '' || inputs.pool-def == null) && env.DEFAULT_POOL_DEF || inputs.pool-def }} -v devhub"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEFAULT_POOL_DEF: 'project-${{ inputs.pool-tag}}-pool-def.json'
+          DEFAULT_POOL_DEF: 'config/project-${{ inputs.pool-tag}}-pool-def.json'
         
       # Publish artifacts
       - uses: actions/upload-artifact@v2
