@@ -1,0 +1,53 @@
+name: 'PR Validation'
+on:
+  workflow_call:
+    inputs:
+      source-dir:
+          required: true
+          type: string
+    secrets:
+      DEVHUB_SFDX_AUTH_URL:
+        required: true
+
+jobs:
+  validate:
+    name: "Validate Changed Packages"
+    runs-on: ubuntu-latest
+    container: ghcr.io/flxbl-io/sfp:latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: "npm install"
+        run: |
+          npm install
+
+      - name: "Authenticate Dev Hub"
+        run: |
+          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
+          sf org login sfdx-url -f authfile -a devhub
+
+      - name: "Create scratch org"
+        run: "sf org create scratch --set-default --alias org1 --target-dev-hub devhub --wait 20"
+
+      - name: "Push source to scratch org"
+        run: "sf project deploy start --source-dir ${{ inputs.source-dir }} --target-org org1 --test-level RunLocalTests --wait 20"
+
+      - name: "Cleanups"
+        run: "sf org delete scratch --target-org org1 --noprompt"
+
+  static:
+    name: "Static Apex Code Analysis"
+    runs-on: ubuntu-latest
+    container: ghcr.io/dxatscale/sfpowerscripts
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: "Run PMD static code analysis"
+        shell: bash
+        run: |
+          sf scanner run -p ./src --target "./**/**.cls" --outfile scanner-output.xml --format=junit

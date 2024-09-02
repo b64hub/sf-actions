@@ -11,6 +11,15 @@
 		"ghcr.io/devcontainers/features/common-utils:2": {},
 		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
 		"ghcr.io/devcontainers/features/node:1": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"github.vscode-github-actions",
+				"GitHub.copilot",
+				"GitHub.vscode-pull-request-github"
+			]
+		}
 	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
