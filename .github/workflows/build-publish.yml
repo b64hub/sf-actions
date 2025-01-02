@@ -36,7 +36,7 @@ jobs:
   build-publish:
     name: 'Build and publish artifact'
     runs-on: ubuntu-latest
-    container: ghcr.io/flxbl-io/sfp-rc:alpha
+    container: ghcr.io/flxbl-io/sfp:latest
     steps:
       - uses: actions/checkout@v3
         with:

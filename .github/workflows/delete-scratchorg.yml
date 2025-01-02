@@ -1,0 +1,28 @@
+name: "Scratch Org Recycler - User Triggered"
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: "Username of the scratch org"
+        required: true
+
+env:
+  SFPOWERSCRIPTS_SPLUNK: ${{ vars.SFPOWERSCRIPTS_SPLUNK }}
+  SFPOWERSCRIPTS_SPLUNK_API_KEY: ${{ secrets.SFPOWERSCRIPTS_SPLUNK_API_KEY }}
+  SFPOWERSCRIPTS_SPLUNK_HOST: ${{ vars.SFPOWERSCRIPTS_SPLUNK_HOST}}
+
+jobs:
+  delete-scratchorg:
+    name: "Return a used scratch org to the pool ${{ github.event.inputs.username }}"
+    runs-on: ubuntu-latest
+    container: ghcr.io/flxbl-io/sfp:latest
+
+    steps:
+      - name: "Authenticate Dev Hub"
+        run: |
+          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
+          sf org login sfdx-url -f authfile -a devhub
+
+      - name: "Delete scratch org ${{ github.event.inputs.username }}"
+        run: "sfp pool:org:delete -u ${{ github.event.inputs.username }} -v devhub"

@@ -50,7 +50,7 @@ jobs:
     needs: check
     if: needs.check.outputs.auth_url != '' && needs.check.outputs.auth_url != '""'
     runs-on: ubuntu-latest
-    container: ghcr.io/flxbl-io/sfp-rc:alpha
+    container: ghcr.io/flxbl-io/sfp:latest
     permissions:
       contents: read
       pull-requests: write
@@ -98,7 +98,7 @@ jobs:
     needs: check
     if: needs.check.outputs.auth_url == '' || needs.check.outputs.auth_url == '""'
     runs-on: ubuntu-latest
-    container: ghcr.io/flxbl-io/sfp-rc:alpha
+    container: ghcr.io/flxbl-io/sfp:latest
     permissions:
       contents: read
       pull-requests: write

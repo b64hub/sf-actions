@@ -20,7 +20,7 @@ jobs:
   create-sandbox:
     runs-on: ubuntu-latest
     container:
-      image: flxbl-io/sfp-rc:Mar-23
+      image: ghcr.io/flxbl-io/sfp:latest
 
     steps:
       - uses: actions/checkout@v3

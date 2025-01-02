@@ -47,7 +47,7 @@ jobs:
   pool:
     name: 'Replenish "${{ inputs.pool-tag }}" pool'
     runs-on: ubuntu-latest
-    container: ghcr.io/flxbl-io/sfp-rc:release-Mar24
+    container: ghcr.io/flxbl-io/sfp:latest
     timeout-minutes: 720 #Set to Maximum Time out
     steps:
       - uses: actions/checkout@v3

@@ -47,7 +47,7 @@ jobs:
 
   cleanup-on-close:
     runs-on: ubuntu-latest
-    container: ghcr.io/flxbl-io/sfp-rc:alpha
+    container: ghcr.io/flxbl-io/sfp:latest
     needs: check
     if: needs.check.outputs.authUrl != '' && needs.check.outputs.authUrl != '""'
     steps:

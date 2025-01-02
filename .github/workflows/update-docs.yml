@@ -1,0 +1,99 @@
+name: Update Docs
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  update-docs:
+    if: contains(github.event.comment.body, '/docs') && github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Copy readme files
+        run: node scripts/docs/copyReadmes.js
+
+      - name: Run prettier
+        run: |
+          npm i -g prettier
+          prettier -w docs/packages
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [ -n "$(git status docs/packages --porcelain)" ]; then
+            echo "CHANGES=true" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGES=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.CHANGES == 'true'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add docs/packages/*.md docs/packages/.images/*
+          git commit -m "Auto-update readme files and images"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  update-apex-docs:
+    if: contains(github.event.comment.body, '/docs') && github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate ApexDocs
+        run: node scripts/lib/scripts/docs/apexdocs.js
+
+      - name: Run prettier
+        run: |
+          npm i -g prettier
+          prettier -w docs/package-api
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if [ -n "$(git status docs/package-api --porcelain)" ]; then
+            echo "CHANGES=true" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGES=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.CHANGES == 'true'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add docs/package-api/*
+          git commit -m "Auto-update Apexdocs files"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
