@@ -76,7 +76,7 @@ jobs:
           DEFAULT_POOL_DEF: 'config/project-${{ inputs.pool-tag}}-pool-def.json'
         
       # Publish artifacts
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
           name: scratchorg-logs-pool-${{ inputs.pool-tag }}

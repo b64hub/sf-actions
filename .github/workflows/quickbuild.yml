@@ -48,7 +48,7 @@ jobs:
           sfp quickbuild -v devhub --diffcheck --buildnumber ${GITHUB_RUN_ID} --branch ${GITHUB_REF#refs/heads/}
 
       # Publish artifacts
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: quickbuild-artifacts
           path: artifacts
