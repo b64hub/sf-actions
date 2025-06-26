@@ -2,30 +2,15 @@ name: Quickbuild
 on:
   workflow_call:
     inputs:
-      datadog:
+      submodules:
         required: false
         type: boolean
-        default: false
-      newrelic:
-        required: false
-        type: boolean
-        default: false
+        default: true
     secrets:
       DEVHUB_SFDX_AUTH_URL:
         required: true
-      DATADOG_HOST:
-        required: false
-      DATADOG_API_KEY:
-        required: false
-      NEWRELIC_INSIGHT_INSERT_KEYS:
-        required: false
         
-env:
-  SFPOWERSCRIPTS_NEWRELIC: "${{ inputs.newrelic }}"
-  SFPOWERSCRIPTS_NEWRELIC_API_KEY: '${{ secrets.NEWRELIC_INSIGHT_INSERT_KEYS }}'
-  SFPOWERSCRIPTS_DATADOG: "${{ inputs.datadog }}"
-  SFPOWERSCRIPTS_DATADOG_HOST: "${{ secrets.DATADOG_HOST }}"
-  SFPOWERSCRIPTS_DATADOG_API_KEY: "${{ secrets.DATADOG_API_KEY }}"
+
 
 jobs:
   quickbuild:
@@ -33,8 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/flxbl-io/sfp:latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
+          submodules: ${{ inputs.submodules }}
           fetch-depth: 0
 
       - name: 'Authenticate Dev Hub'
