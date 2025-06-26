@@ -5,51 +5,9 @@ on:
     types: [created]
 
 jobs:
-  check:
+  create-review-org:
     if: contains(github.event.comment.body, '/review-org') && github.event.issue.pull_request != null
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-      issues: read
-    outputs:
-      auth_url: ${{ steps.fetch-auth-url.outputs.result }}
-    steps:
-      - name: Fetch Auth Url
-        id: fetch-auth-url
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const issue_number = context.issue.number;
-            const comments = await github.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue_number,
-            });
-
-            let authUrl = '';
-            const identifier = 'Review org 🌩️';
-
-            for (const comment of comments.data) {
-              if (comment.body.includes(identifier)) {
-                const matches = comment.body.match(/auth_url:\s*(.*)/);
-                if (matches && matches[1]) {
-                  authUrl = matches[1].trim();
-                  console.log("Auth url found");
-                  break;
-                }
-              }
-            }
-
-            console.log(authUrl);
-
-            return authUrl;
-
-  reuse-review-org:
-    needs: check
-    if: needs.check.outputs.auth_url != '' && needs.check.outputs.auth_url != '""'
-    runs-on: ubuntu-latest
     container: ghcr.io/flxbl-io/sfp:latest
     permissions:
       contents: read
@@ -57,60 +15,9 @@ jobs:
       issues: write
     env:
       pool-tag: ci
-    outputs:
-      auth_url: ${{ steps.org-info.outputs.auth_url }}
-      login_url: ${{ steps.org-info.outputs.login_url}}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
-        with:
-          ref: "refs/pull/${{ github.event.issue.number }}/merge"
-          fetch-depth: 0
-
-      - name: "npm install"
-        run: |
-          npm install
-
-      - name: "Authenticate Dev Hub"
-        run: |
-          echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
-          sf org login sfdx-url -f authfile -a devhub
-      
-      - name: "Authenticate scratch org"
-        run: |
-          echo ${{ needs.check.outputs.authUrl }} > ./scratch_authfile
-          sf org login sfdx-url -f scratch_authfile -a review-org -s
-
-      - name: "Push source to scratch org"
-        run: "sfp validateAgainstOrg -u review-org -p ${{ env.pool-tag }} -v devhub"
-
-      - name: "Store scratch org info"
-        id: org-info
-        run: |
-          sf org display --verbose --json | jq '.result.sfdxAuthUrl' > ./auth_url
-          echo "auth_url=$(cat ./auth_url)" >> $GITHUB_OUTPUT
-          sf org open -r --json | jq '.result.url' > ./login_url
-          echo "login_url=$(cat ./login_url)" >> $GITHUB_OUTPUT
-
-
-
-  create-review-org:
-    needs: check
-    if: needs.check.outputs.auth_url == '' || needs.check.outputs.auth_url == '""'
-    runs-on: ubuntu-latest
-    container: ghcr.io/flxbl-io/sfp:latest
-    permissions:
-      contents: read
-      pull-requests: write
-      issues: write
-    env:
-      pool-tag: ci
-    outputs:
-      auth_url: ${{ steps.org-info.outputs.auth_url }}
-      login_url: ${{ steps.org-info.outputs.login_url}}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: ctions/checkout@v4
         with:
           ref: "refs/pull/${{ github.event.issue.number }}/merge"
           fetch-depth: 0
@@ -128,51 +35,15 @@ jobs:
         run: "sfp validate -p ${{ env.pool-tag }} -v devhub"
 
       - name: "Store scratch org info"
-        id: org-info
         run: |
-          sf org display --verbose --json | jq '.result.sfdxAuthUrl' > ./auth_url
-          echo "auth_url=$(cat ./auth_url)" >> $GITHUB_OUTPUT
-          sf org open -r --json | jq '.result.url' > ./login_url
-          echo "login_url=$(cat ./login_url)" >> $GITHUB_OUTPUT
+          echo "auth_url=$(sf org display --verbose --json | jq -r '.result.sfdxAuthUrl')" >> $GITHUB_ENV
+          echo "login_url=$(sf org open -r --json | jq -r '.result.url')" >> $GITHUB_ENV
 
-
-  post-comment:
-    needs: [reuse-review-org, create-review-org]
-    steps:
-
-      - name: Set env variables
-        if: ${{needs.create-review-org.outputs.auth_url}} != ''
-        run: |
-          echo "auth_url=${{needs.create-review-org.outputs.auth_url}}" >> $GITHUB_ENV
-          echo "login_url=${{needs.create-review-org.outputs.login_url}}" >> $GITHUB_ENV
-
-      - name: Set env variables
-        if: ${{needs.reuse-review-org.outputs.auth_url}} != ''
-        run: |
-          echo "auth_url=${{needs.reuse-review-org.outputs.auth_url}}" >> $GITHUB_ENV
-          echo "login_url=${{needs.reuse-review-org.outputs.login_url}}" >> $GITHUB_ENV
-
-      - name: Post Comment
-        env:
-          auth_url:
-          login_url: 
-        uses: actions/github-script@v3
+      - name: Post comment
+        uses: peter-evans/create-or-update-comment@v4
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const issue_number = context.issue.number;
-            const auth_url = process.env.auth_url;
-            const login_url = process.env.login_url;
-
-            const output = `Review org 🌩️
-              auth_url: ${auth_url}
-              login_url: ${login_url}
-            `.replace(/"/g, '');
-
-            const comment = {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue_number,
-              body: output,
-            };
-            github.issues.createComment(comment);
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Review org 🌩️
+            Auth url: `${{ env.AUTH_URL }}`
+            Login url: `${{ env.LOGIN_URL }}`

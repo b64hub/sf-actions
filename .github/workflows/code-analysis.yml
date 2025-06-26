@@ -1,0 +1,133 @@
+name: "Salesforce Code Analyzer"
+on:
+  workflow_call:
+    inputs:
+      diff-check:
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  pull-requests: write
+  contents: read
+  actions: read
+
+jobs:
+  lwc-analysis:
+    name: "ESLint LWC Code Analysis"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: "${{ github.head_ref || github.ref }}"
+
+      - name: Ensure node v20.9.0 or greater
+        uses: actions/setup-node@v4
+        with:
+          node-version: ">=20.9.0"
+
+      - name: Ensure java v11 or greater
+        uses: actions/setup-java@v4
+        with:
+          java-version: ">=11"
+          distribution: "zulu"
+
+      - name: Ensure python v3.10 or greater
+        uses: actions/setup-python@v5
+        with:
+          python-version: ">=3.10"
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli@latest
+
+      - name: Install Latest Salesforce Code Analyzer CLI Plugin
+        run: sf plugins install code-analyzer@latest
+
+      - name: Changed LWC files
+        id: changed-lwc-files
+        if: ${{ inputs.diff-check }}
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            **/*.js
+            **/*.ts
+          files_ignore: |
+            **/node_modules/**
+            **/__tests__/**
+            **/*.test.js
+            **/*.test.ts
+            scripts/**
+
+      - name: "Run Code Analyzer"
+        id: run-code-analyzer
+        if: ${{ !inputs.diff-check || steps.changed-lwc-files.outputs.any_changed == 'true' }}
+        uses: forcedotcom/run-code-analyzer@v2
+        with:
+          run-arguments: --workspace . --view detail --output-file sfca_results.html --output-file sfca_results.json --target ${{ inputs.diff-check && steps.changed-lwc-files.outputs.all_changed_files || '**/*.js,**/*.ts' }} --rule-selector lwc
+          results-artifact-name: lwc-code-analyzer-results
+          github-token: ${{ github.token }}
+
+      - name: Check the Outputs to Determine Whether to Fail
+        if: |
+          steps.run-code-analyzer.outputs.exit-code > 0 ||
+          steps.run-code-analyzer.outputs.num-sev1-violations > 0 ||
+          steps.run-code-analyzer.outputs.num-sev2-violations > 0 ||
+          steps.run-code-analyzer.outputs.num-violations > 10
+        run: exit 1
+
+  apex-analysis:
+    name: "PMD Apex Code Analysis"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: "${{ github.head_ref || github.ref }}"
+
+      - name: Ensure node v20.9.0 or greater
+        uses: actions/setup-node@v4
+        with:
+          node-version: ">=20.9.0"
+
+      - name: Ensure java v11 or greater
+        uses: actions/setup-java@v4
+        with:
+          java-version: ">=11"
+          distribution: "zulu"
+
+      - name: Ensure python v3.10 or greater
+        uses: actions/setup-python@v5
+        with:
+          python-version: ">=3.10"
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli@latest
+
+      - name: Install Latest Salesforce Code Analyzer CLI Plugin
+        run: sf plugins install code-analyzer@latest
+
+      - name: Changed apex files
+        id: changed-apex-files
+        if: ${{ inputs.diff-check }}
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            **/*.cls
+
+      - name: "Run Code Analyzer"
+        id: run-code-analyzer
+        if: ${{ !inputs.diff-check || steps.changed-apex-files.outputs.any_changed == 'true' }}
+        uses: forcedotcom/run-code-analyzer@v2
+        with:
+          run-arguments: --workspace . --view detail --output-file sfca_results.html --output-file sfca_results.json --target ${{ inputs.diff-check && steps.changed-apex-files.outputs.all_changed_files || '**/*.cls' }} --rule-selector apex
+          results-artifact-name: apex-code-analyzer-results
+          github-token: ${{ github.token }}
+
+      - name: Check the Outputs to Determine Whether to Fail
+        if: |
+          steps.run-code-analyzer.outputs.exit-code > 0 ||
+          steps.run-code-analyzer.outputs.num-sev1-violations > 0 ||
+          steps.run-code-analyzer.outputs.num-sev2-violations > 0 ||
+          steps.run-code-analyzer.outputs.num-violations > 10
+        run: exit 1

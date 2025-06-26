@@ -1,34 +1,22 @@
-name: 'PR Validation'
+name: "PR Validate Reusable"
 on:
   workflow_call:
     inputs:
       pool-tag:
         required: true
         type: string
-      datadog:
+      mode:
+        required: false
+        type: string
+        default: "thorough"
+      diff-check:
         required: false
         type: boolean
-        default: false
-      newrelic:
-        required: false
-        type: boolean
-        default: false
-    secrets:
-      DEVHUB_SFDX_AUTH_URL:
-        required: true
-      DATADOG_HOST:
-        required: false
-      DATADOG_API_KEY:
-        required: false
-      NEWRELIC_INSIGHT_INSERT_KEYS:
-        required: false
-          
-env:
-  SFPOWERSCRIPTS_NEWRELIC: "${{ inputs.newrelic }}"
-  SFPOWERSCRIPTS_NEWRELIC_API_KEY: '${{ secrets.NEWRELIC_INSIGHT_INSERT_KEYS }}'
-  SFPOWERSCRIPTS_DATADOG: "${{ inputs.datadog }}"
-  SFPOWERSCRIPTS_DATADOG_HOST: "${{ secrets.DATADOG_HOST }}"
-  SFPOWERSCRIPTS_DATADOG_API_KEY: "${{ secrets.DATADOG_API_KEY }}"
+        default: true
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   validate:
@@ -37,9 +25,10 @@ jobs:
     container: ghcr.io/flxbl-io/sfp:latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: telenornorgeinternal/gap/actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: "${{ github.head_ref || github.ref }}"
 
       - name: "npm install"
         run: |
@@ -50,19 +39,6 @@ jobs:
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
           sf org login sfdx-url -f authfile -a devhub
 
+      # Validate source and trigger test
       - name: "Push source to scratch org"
-        run: "sfp validate -p ${{ inputs.pool-tag }} -v devhub -x --basebranch ${{ github.base_ref }}"
-
-  static:
-    name: "Static Apex Code Analysis"
-    runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: "Run PMD static code analysis"
-        shell: bash
-        run: |
-          sf scanner run -p ./src --target "./**/**.cls" --outfile scanner-output.xml --format=junit
+        run: "sfp validate pool -p ${{ inputs.pool-tag }} -v devhub -x --baseRef ${{ github.event.pull_request.base.sha }} --ref ${{ github.event.pull_request.head.sha }} --mode ${{ inputs.mode }} ${{ inputs.diff-check && '--disablediffcheck' || '' }}"

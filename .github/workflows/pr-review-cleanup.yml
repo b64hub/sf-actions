@@ -5,51 +5,50 @@ on:
     types: [closed]
 
 jobs:
-  check:
+  find-auth-url:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
       issues: read
     outputs:
-      auth_url: ${{ steps.fetch_auth_url.outputs.result }}
+      auth_url: ${{ steps.extract_auth_url.outputs.result }}
     steps:
-      - name: Fetch Auth Url
-        id: fetch_auth_url
-        uses: actions/github-script@v3
+      - name: Find Review Org Comment
+        id: find_comment
+        uses: peter-evans/find-comment@v3
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            const issue_number = context.issue.number;
-            const comments = await github.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue_number,
-            });
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: "Review org 🌩️"
 
-            let authUrl = '';
-            const identifier = 'Review org 🌩️';
+      - name: Extract Auth URL
+        if: steps.find_comment.outputs.comment-id != 0
+        id: extract_auth_url
+        run: |
+          if [[ "${{ steps.find_comment.outputs.result }}" == "" ]]; then
+            echo "No auth URL found in comments."
+            echo "result=" >> $GITHUB_OUTPUT
+          else
+            auth_url=$(echo "${{ steps.find_comment.outputs.comment-body }}" | grep -oP '(?<=Auth url: `)[^`]+')
+            echo "result=$auth_url" >> $GITHUB_OUTPUT
+          fi
 
-            for (const comment of comments.data) {
-              if (comment.body.includes(identifier)) {
-                const matches = comment.body.match(/auth_url:\s*(.*)/);
-                if (matches && matches[1]) {
-                  authUrl = matches[1].trim();
-                  console.log("Auth url found");
-                  break;
-                }
-              }
-            }
+      - name: Edit comment
+        if: steps.extract_auth_url.outputs.result != ''
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          body: |
+            Review org 🌩️
+            Auth url: [deleted]
+            Login url: [deleted]
 
-            console.log(authUrl);
-
-            return authUrl;
-
-  cleanup-on-close:
+  delete-review-org:
     runs-on: ubuntu-latest
     container: ghcr.io/flxbl-io/sfp:latest
-    needs: check
-    if: needs.check.outputs.authUrl != '' && needs.check.outputs.authUrl != '""'
+    needs: find-auth-url
+    if: needs.find-auth-url.outputs.auth_url != '' && needs.find-auth-url.outputs.auth_url != '""'
     steps:
       - name: "Authenticate Dev Hub"
         run: |
@@ -58,9 +57,9 @@ jobs:
 
       - name: "Authenticate scratch org"
         run: |
-          echo ${{ needs.check.outputs.authUrl }} > ./scratch_authfile
+          echo ${{ needs.find-auth-url.outputs.auth_url }} > ./scratch_authfile
           sf org login sfdx-url -f scratch_authfile -a review-org
 
       - name: "Delete org"
         run: |
-          sfp pool:org:delete -u review-org -v devhub
+          sfp pool org delete -u review-org -v devhub
