@@ -4,8 +4,9 @@ on:
     inputs:
       submodules:
         required: false
-        type: boolean
-        default: true
+        type: string
+        description: 'Whether to include submodules in the checkout. Set to "true" or "recursive" to include submodules.'
+        default: 'false'
     secrets:
       DEVHUB_SFDX_AUTH_URL:
         required: true
