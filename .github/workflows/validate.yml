@@ -25,7 +25,7 @@ jobs:
     container: ghcr.io/flxbl-io/sfp:latest
 
     steps:
-      - uses: telenornorgeinternal/gap/actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: "${{ github.head_ref || github.ref }}"
