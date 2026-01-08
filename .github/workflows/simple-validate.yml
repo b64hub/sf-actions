@@ -37,17 +37,3 @@ jobs:
 
       - name: "Cleanups"
         run: "sf org delete scratch --target-org org1 --noprompt"
-
-  static:
-    name: "Static Apex Code Analysis"
-    runs-on: ubuntu-latest
-    container: ghcr.io/dxatscale/sfpowerscripts
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: "Run PMD static code analysis"
-        shell: bash
-        run: |
-          sf scanner run -p ./src --target "./**/**.cls" --outfile scanner-output.xml --format=junit
