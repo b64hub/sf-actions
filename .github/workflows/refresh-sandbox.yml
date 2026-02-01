@@ -1,6 +1,9 @@
 name: "Refresh Salesforce Sandbox"
 
 on:
+  repository_dispatch:
+    types: [external-trigger-sandbox-refresh]
+
   workflow_call:
     inputs:
       sandbox_name:
@@ -27,7 +30,23 @@ jobs:
         with: 
           ref: ${{ inputs.git-ref }}
           fetch-depth: 0
-    
+      
+      - name: Set Variables
+        id: set-vars
+        shell: pwsh
+        run: |
+          if("${{ github.event_name }}" -eq "workflow_call"){
+            $sandboxName = "${{ inputs.sandbox_name }}"
+            $definitionFile = "${{ inputs.definition_file }}"
+          }
+          else if("${{ github.event_name }}" -eq "repository_dispatch"){
+            $sandboxName = "${{ github.event.client_payload.sandbox_name}}"
+            $definitionFile = "${{ github.event.client_payload.definition_file}}"
+          }
+          Write-Output "sandboxName = $sandboxName" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Output "definitionFile = $definitionFile" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+
       - name: 'Authenticate Dev Hub'
         run: |
           echo "${{ secrets.DEVHUB_SFDX_AUTH_URL }}" > ./authfile
@@ -35,5 +54,5 @@ jobs:
 
       - name: Refresh Salesforce Sandbox
         run: |
-          sf org refresh sandbox -f ${{ inputs.definition_file }} \
-           --name ${{ inputs.sandbox_name }} --target-org devhub --no-prompt --async
+          sf org refresh sandbox -f ${{ steps.set-vars.outputs.definitionFile }} \
+          --name ${{ steps.set-vars.outputs.sandboxName}} --target-org devhub --no-prompt --async
